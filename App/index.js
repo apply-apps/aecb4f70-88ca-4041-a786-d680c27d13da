@@ -1,53 +1,82 @@
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+// Filename: index.js
+// Combined code from all files
 
-const App = () => {
-  const fullText = 'Hi, this is Apply.\nCreating mobile apps is now as simple as typing text.\nJust input your idea and press APPLY, and our platform does the rest...';
-  const [displayedText, setDisplayedText] = useState('');
-  const [index, setIndex] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
+import React, { useState } from 'react';
+import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View, FlatList } from 'react-native';
+import ConfettiCannon from 'react-native-confetti-cannon';
 
-  useEffect(() => {
-    if (isPaused) return;
+const colors = ['red', 'blue', 'green', 'yellow', 'pink', 'purple'];
 
-    const interval = setInterval(() => {
-      setDisplayedText((prev) => prev + fullText[index]);
-      setIndex((prev) => {
-        if (prev === fullText.length - 1) {
-          setIsPaused(true);
-          setTimeout(() => {
-            setDisplayedText('');
-            setIndex(0);
-            setIsPaused(false);
-          }, 2000);
-          return 0;
+export default function App() {
+    const [selectedColors, setSelectedColors] = useState([]);
+    const [showConfetti, setShowConfetti] = useState(false);
+
+    const handleColorPress = (color) => {
+        if (!selectedColors.includes(color)) {
+            const updatedColors = [...selectedColors, color];
+
+            setSelectedColors(updatedColors);
+
+            if (updatedColors.length === colors.length) {
+                setShowConfetti(true);
+            }
         }
-        return prev + 1;
-      });
-    }, 100);
+    };
 
-    return () => clearInterval(interval);
-  }, [index, isPaused]);
+    const renderColor = ({ item }) => (
+        <TouchableOpacity
+            style={[styles.colorButton, { backgroundColor: item }]}
+            onPress={() => handleColorPress(item)}
+            disabled={selectedColors.includes(item)}
+        >
+            <Text style={styles.colorText}>
+                {selectedColors.includes(item) ? '✓' : ''}
+            </Text>
+        </TouchableOpacity>
+    );
 
-  return (
-    <View style={styles.container}>
-      <Text style={styles.text}>{displayedText}</Text>
-    </View>
-  );
-};
+    return (
+        <SafeAreaView style={styles.container}>
+            <Text style={styles.title}>Select All Colors</Text>
+            <FlatList
+                data={colors}
+                renderItem={renderColor}
+                keyExtractor={(item) => item}
+                contentContainerStyle={styles.colorList}
+            />
+            {showConfetti && <ConfettiCannon count={200} origin={{x: -10, y: 0}} />}
+        </SafeAreaView>
+    );
+}
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    backgroundColor: 'black',
-    padding: 20,
-  },
-  text: {
-    color: 'white',
-    fontSize: 24,
-    fontFamily: 'monospace',
-  },
+    container: {
+        flex: 1,
+        backgroundColor: '#fff',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 16,
+    },
+    title: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        marginBottom: 20,
+    },
+    colorList: {
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    colorButton: {
+        width: 100,
+        height: 100,
+        margin: 10,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderRadius: 10,
+    },
+    colorText: {
+        fontSize: 18,
+        color: '#fff',
+        fontWeight: 'bold',
+    },
 });
-
-export default App;
