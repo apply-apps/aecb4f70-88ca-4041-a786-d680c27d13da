@@ -2,49 +2,54 @@
 // Combined code from all files
 
 import React, { useState } from 'react';
-import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View, FlatList } from 'react-native';
-import ConfettiCannon from 'react-native-confetti-cannon';
-
-const colors = ['red', 'blue', 'green', 'yellow', 'pink', 'purple'];
+import { SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, FlatList, View } from 'react-native';
+import * as Notifications from 'expo-notifications';
 
 export default function App() {
-    const [selectedColors, setSelectedColors] = useState([]);
-    const [showConfetti, setShowConfetti] = useState(false);
+    const [reminder, setReminder] = useState('');
+    const [reminders, setReminders] = useState([]);
 
-    const handleColorPress = (color) => {
-        if (!selectedColors.includes(color)) {
-            const updatedColors = [...selectedColors, color];
-
-            setSelectedColors(updatedColors);
-
-            if (updatedColors.length === colors.length) {
-                setShowConfetti(true);
-            }
+    const handleAddReminder = () => {
+        if (reminder) {
+            const newReminders = [...reminders, reminder];
+            setReminders(newReminders);
+            setReminder('');
+            scheduleNotification(reminder);
         }
     };
 
-    const renderColor = ({ item }) => (
-        <TouchableOpacity
-            style={[styles.colorButton, { backgroundColor: item }]}
-            onPress={() => handleColorPress(item)}
-            disabled={selectedColors.includes(item)}
-        >
-            <Text style={styles.colorText}>
-                {selectedColors.includes(item) ? '✓' : ''}
-            </Text>
-        </TouchableOpacity>
-    );
+    const scheduleNotification = async (reminderText) => {
+        await Notifications.scheduleNotificationAsync({
+            content: {
+                title: 'Important Reminder',
+                body: reminderText,
+            },
+            trigger: { seconds: 5 },
+        });
+    };
 
     return (
         <SafeAreaView style={styles.container}>
-            <Text style={styles.title}>Select All Colors</Text>
-            <FlatList
-                data={colors}
-                renderItem={renderColor}
-                keyExtractor={(item) => item}
-                contentContainerStyle={styles.colorList}
+            <Text style={styles.title}>Important Reminders</Text>
+            <TextInput
+                style={styles.input}
+                placeholder="Enter reminder"
+                value={reminder}
+                onChangeText={setReminder}
             />
-            {showConfetti && <ConfettiCannon count={200} origin={{x: -10, y: 0}} />}
+            <TouchableOpacity style={styles.button} onPress={handleAddReminder}>
+                <Text style={styles.buttonText}>Add Reminder</Text>
+            </TouchableOpacity>
+            <FlatList
+                data={reminders}
+                keyExtractor={(item, index) => index.toString()}
+                renderItem={({ item }) => (
+                    <View style={styles.reminderItem}>
+                        <Text style={styles.reminderText}>{item}</Text>
+                    </View>
+                )}
+                contentContainerStyle={styles.reminderList}
+            />
         </SafeAreaView>
     );
 }
@@ -53,30 +58,44 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#fff',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 16,
+        padding: 20,
     },
     title: {
         fontSize: 24,
         fontWeight: 'bold',
         marginBottom: 20,
+        textAlign: 'center',
     },
-    colorList: {
+    input: {
+        height: 40,
+        borderColor: '#ccc',
+        borderWidth: 1,
+        borderRadius: 5,
+        paddingHorizontal: 10,
+        marginBottom: 10,
+    },
+    button: {
+        backgroundColor: '#007bff',
+        padding: 10,
+        borderRadius: 5,
         alignItems: 'center',
-        justifyContent: 'center',
+        marginBottom: 20,
     },
-    colorButton: {
-        width: 100,
-        height: 100,
-        margin: 10,
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderRadius: 10,
-    },
-    colorText: {
-        fontSize: 18,
+    buttonText: {
         color: '#fff',
-        fontWeight: 'bold',
+        fontSize: 16,
+    },
+    reminderList: {
+        alignItems: 'center',
+    },
+    reminderItem: {
+        backgroundColor: '#f9f9f9',
+        padding: 10,
+        marginVertical: 5,
+        borderRadius: 5,
+        width: '100%',
+    },
+    reminderText: {
+        fontSize: 16,
     },
 });
